@@ -1,6 +1,6 @@
 # CoPo App
 
-App de carpooling similar a BlaBlaCar.
+App de carpooling.
 
 ## Stack
 
