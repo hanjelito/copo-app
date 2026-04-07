@@ -107,6 +107,8 @@ curl -X POST http://localhost:8081/auth/refresh \
 
 ## Arquitectura
 
+![Arquitectura CoPo](images/Copo.jpg)
+
 ```
 Clientes (Mobile App / Web / CLI)
           ↓
