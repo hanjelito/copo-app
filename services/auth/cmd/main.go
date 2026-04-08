@@ -26,9 +26,12 @@ func main() {
 
 	userRepo := repository.NewRepository(db)
 	authSvc := service.NewAuthService(userRepo)
-	authHandler := handler.NewAuthHandler(authSvc)
+	userSvc := service.NewUserService(userRepo)
 
-	r := router.New(authHandler)
+	authHandler := handler.NewAuthHandler(authSvc)
+	userHandler := handler.NewUserHandler(userSvc)
+
+	r := router.New(authHandler, userHandler)
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8081"

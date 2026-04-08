@@ -8,7 +8,7 @@ import (
 	chimw "github.com/go-chi/chi/v5/middleware"
 )
 
-func New(authHandler *handler.AuthHandler) *chi.Mux {
+func New(authHandler *handler.AuthHandler, userHandler *handler.UserHandler) *chi.Mux {
 	r := chi.NewRouter()
 	r.Use(chimw.Logger)
 	r.Use(chimw.Recoverer)
@@ -21,6 +21,8 @@ func New(authHandler *handler.AuthHandler) *chi.Mux {
 	r.Group(func(r chi.Router) {
 		r.Use(authmw.JWTAuth)
 		r.Get("/auth/me", authHandler.Me)
+		r.Get("/users/me", userHandler.GetMe)
+		r.Put("/users/me", userHandler.UpdateMe)
 	})
 
 	return r

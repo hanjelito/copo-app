@@ -103,6 +103,49 @@ curl -X POST http://localhost:8081/auth/login \
 curl -X POST http://localhost:8081/auth/refresh \
   -H "Content-Type: application/json" \
   -d '{"refresh_token":"<tu_refresh_token>"}'
+
+# Obtener perfil
+curl http://localhost:8081/users/me \
+  -H "Authorization: Bearer <tu_access_token>"
+
+# Actualizar nombre
+curl -X PUT http://localhost:8081/users/me \
+  -H "Authorization: Bearer <tu_access_token>" \
+  -H "Content-Type: application/json" \
+  -d '{"name": "Angel Updated"}'
+```
+
+## API Gateway (`gateway`)
+
+Puerto: `8080` — punto de entrada único para todos los clientes.
+
+### Ejemplos curl (vía gateway)
+
+```bash
+# Guardar token en variable
+TOKEN=$(curl -s -X POST http://localhost:8080/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"test@copo.com","password":"123456"}' | grep -o '"access_token":"[^"]*"' | cut -d'"' -f4)
+
+# Registro
+curl -X POST http://localhost:8080/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{"email":"test@copo.com","password":"123456","name":"Angel","role":"driver"}'
+
+# Login
+curl -X POST http://localhost:8080/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"test@copo.com","password":"123456"}'
+
+# Obtener perfil
+curl http://localhost:8080/users/me \
+  -H "Authorization: Bearer $TOKEN"
+
+# Actualizar nombre
+curl -X PUT http://localhost:8080/users/me \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"name": "Angel Updated"}'
 ```
 
 ## Arquitectura
@@ -159,12 +202,12 @@ Cliente → API Gateway (JWT + rate limit)
   - [x] `handler/auth.go` — HTTP handlers
   - [x] `cmd/main.go` — entry point
   - [x] `middleware/jwt.go` — validar JWT en rutas protegidas ✅
-- [ ] User Service (`/users`) — perfil básico
-  - [ ] GET `/users/me` — obtener perfil
-  - [ ] PUT `/users/me` — actualizar perfil
-- [ ] API Gateway — enrutar hacia servicios internos vía gRPC
-  - [ ] JWT Auth + rate limiting
-  - [ ] Rutas: `/auth/*`, `/users/*`, `/rides/*`, `/bookings/*`
+- [x] User Service (`/users`) — perfil básico ✅
+  - [x] GET `/users/me` — obtener perfil
+  - [x] PUT `/users/me` — actualizar perfil
+- [x] API Gateway (`services/gateway`) — proxy HTTP + JWT + rate limiting ✅
+  - [x] JWT Auth + rate limiting (100 req/min por IP)
+  - [x] Rutas: `/auth/*`, `/users/*`, `/rides/*`, `/bookings/*`
 
 ### Fase 2 — Core del negocio
 - [ ] Rides Service (`/rides/*`) — viajes del conductor

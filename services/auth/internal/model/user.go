@@ -31,3 +31,7 @@ type AuthResponse struct {
 type RefreshRequest struct {
 	RefreshToken string `json:"refresh_token"`
 }
+
+type UPdateRequest struct {
+	Name string `json:"name"`
+}

@@ -34,3 +34,13 @@ func (r *UserRepository) FindByEmail(ctx context.Context, email string) (*model.
 	}
 	return u, nil
 }
+
+func (r *UserRepository) UpdateName(ctx context.Context, email, name string) (*model.User, error) {
+	u := &model.User{}
+	err := r.db.QueryRow(ctx, `
+		UPDATE users SET name = $1
+		WHERE email = $2
+		RETURNING id, email, name, role, created_at
+	`, name, email).Scan(&u.ID, &u.Email, &u.Name, &u.Role, &u.CreatedAt)
+	return u, err
+}
