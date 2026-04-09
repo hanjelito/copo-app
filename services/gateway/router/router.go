@@ -34,7 +34,7 @@ func New() *chi.Mux {
 		r.Put("/users/me", proxy.To(userURL))
 		r.Post("/rides", proxy.To(ridesURL))
 		r.Get("/rides", proxy.To(ridesURL))
-		r.Post("/rides/{id}", proxy.To(ridesURL))
+		r.Get("/rides/{id}", proxy.To(ridesURL))
 		r.Post("/bookings", proxy.To(bookingsURL))
 		r.Get("/bookings", proxy.To(bookingsURL))
 		r.Delete("/bookings/{id}", proxy.To(bookingsURL))

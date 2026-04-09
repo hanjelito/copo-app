@@ -23,9 +23,9 @@ func JWTAuth(next http.Handler) http.Handler {
 			http.Error(w, "token requerido", http.StatusUnauthorized)
 			return
 		}
+
 		tokenStr := strings.TrimPrefix(authHeader, "Bearer ")
 		secret := os.Getenv("JWT_SECRET")
-
 		token, err := jwt.Parse(tokenStr, func(t *jwt.Token) (interface{}, error) {
 			return []byte(secret), nil
 		})

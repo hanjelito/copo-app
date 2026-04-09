@@ -209,11 +209,31 @@ Cliente → API Gateway (JWT + rate limit)
   - [x] JWT Auth + rate limiting (100 req/min por IP)
   - [x] Rutas: `/auth/*`, `/users/*`, `/rides/*`, `/bookings/*`
 
+## Rides Service (`services/rides`)
+
+### Schema PostgreSQL
+
+```sql
+CREATE TABLE rides (
+  id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  driver_id   UUID NOT NULL REFERENCES users(id),
+  origin      TEXT NOT NULL,
+  destination TEXT NOT NULL,
+  departure   TIMESTAMP NOT NULL,
+  seats       INT NOT NULL,
+  created_at  TIMESTAMP DEFAULT NOW()
+);
+```
+
+---
+
+## Roadmap de Implementación
+
 ### Fase 2 — Core del negocio
-- [ ] Rides Service (`/rides/*`) — viajes del conductor
-  - [ ] POST `/rides` — crear viaje
-  - [ ] GET `/rides` — listar viajes disponibles
-  - [ ] GET `/rides/:id` — detalle de viaje
+- [x] Rides Service (`/rides/*`) — viajes del conductor ✅
+  - [x] POST `/rides` — crear viaje
+  - [x] GET `/rides` — listar viajes disponibles
+  - [x] GET `/rides/:id` — detalle de viaje
 - [ ] Bookings Service (`/bookings/*`) — reservas del pasajero
   - [ ] POST `/bookings` — reservar viaje (flujo Redis + PG)
   - [ ] GET `/bookings/me` — mis reservas
@@ -224,6 +244,7 @@ Cliente → API Gateway (JWT + rate limit)
 - [ ] Notification Worker — email + push al conductor y pasajero
 
 ### Fase 4 — Extras
+- [ ] Migraciones con `golang-migrate` — crear/actualizar tablas automáticamente
 - [ ] Booking Retry Worker — reintenta INSERT si PG falla
 - [ ] Geo / tracking en tiempo real (Redis Geo + WebSockets)
 - [ ] Pagos

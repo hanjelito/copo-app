@@ -24,10 +24,14 @@ func main() {
 	}
 	defer db.Close()
 
+	//Repository
 	userRepo := repository.NewRepository(db)
+
+	//Service
 	authSvc := service.NewAuthService(userRepo)
 	userSvc := service.NewUserService(userRepo)
 
+	//Handler
 	authHandler := handler.NewAuthHandler(authSvc)
 	userHandler := handler.NewUserHandler(userSvc)
 
@@ -36,6 +40,7 @@ func main() {
 	if port == "" {
 		port = "8081"
 	}
+
 	log.Printf("Auth service corriendo en %s", port)
 	log.Fatal(http.ListenAndServe(":"+port, r))
 }

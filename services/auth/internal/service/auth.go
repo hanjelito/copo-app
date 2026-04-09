@@ -36,11 +36,12 @@ func (s *AuthService) Register(ctx context.Context, req *model.RegisterRequest) 
 		Role:  req.Role,
 	}
 
-	if err := s.repo.Create(ctx, user, string(hashed)); err != nil {
+	id, err := s.repo.Create(ctx, user, string(hashed))
+	if err != nil {
 		return nil, err
 	}
 
-	return s.generateTokens(req.Email, req.Role)
+	return s.generateTokens(id, req.Email, req.Role)
 }
 
 func (s *AuthService) Login(ctx context.Context, req *model.LoginRequest) (*model.AuthResponse, error) {
@@ -52,7 +53,7 @@ func (s *AuthService) Login(ctx context.Context, req *model.LoginRequest) (*mode
 	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(req.Password)); err != nil {
 		return nil, errors.New("credenciales invalidas")
 	}
-	return s.generateTokens(user.Email, user.Role)
+	return s.generateTokens(user.ID, user.Email, user.Role)
 }
 
 func (s *AuthService) RefreshToken(_ context.Context, req *model.RefreshRequest) (*model.AuthResponse, error) {
@@ -70,22 +71,25 @@ func (s *AuthService) RefreshToken(_ context.Context, req *model.RefreshRequest)
 		return nil, errors.New("token invalido")
 	}
 
+	id := claims["id"].(string)
 	email := claims["email"].(string)
 	role := claims["role"].(string)
 
-	return s.generateTokens(email, role)
+	return s.generateTokens(id, email, role)
 }
 
-func (s *AuthService) generateTokens(email, role string) (*model.AuthResponse, error) {
+func (s *AuthService) generateTokens(id, email, role string) (*model.AuthResponse, error) {
 	secret := []byte(os.Getenv("JWT_SECRET"))
 
 	accessToken := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+		"id":    id,
 		"email": email,
 		"role":  role,
 		"exp":   time.Now().Add(15 * time.Minute).Unix(),
 	})
 
 	refreshToken := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+		"id":    id,
 		"email": email,
 		"role":  role,
 		"exp":   time.Now().Add(7 * 24 * time.Minute).Unix(),

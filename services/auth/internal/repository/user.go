@@ -15,12 +15,14 @@ func NewRepository(db *pgxpool.Pool) *UserRepository {
 	return &UserRepository{db: db}
 }
 
-func (r *UserRepository) Create(ctx context.Context, u *model.User, hashedPassword string) error {
-	_, err := r.db.Exec(ctx, `
+func (r *UserRepository) Create(ctx context.Context, u *model.User, hashedPassword string) (string, error) {
+	var id string
+	err := r.db.QueryRow(ctx, `
 		INSERT INTO users (id, email, password, name, role)
 		VALUES (gen_random_uuid(), $1, $2, $3, $4)
-	`, u.Email, hashedPassword, u.Name, u.Role)
-	return err
+		RETURNING id
+	`, u.Email, hashedPassword, u.Name, u.Role).Scan(&id)
+	return id, err
 }
 
 func (r *UserRepository) FindByEmail(ctx context.Context, email string) (*model.User, error) {

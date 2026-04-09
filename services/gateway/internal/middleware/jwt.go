@@ -15,8 +15,8 @@ func JWTAuth(next http.Handler) http.Handler {
 			http.Error(w, "token requerido", http.StatusUnauthorized)
 			return
 		}
-		tokenStr := strings.TrimPrefix(authHeader, "Bearer ")
 
+		tokenStr := strings.TrimPrefix(authHeader, "Bearer ")
 		token, err := jwt.Parse(tokenStr, func(t *jwt.Token) (interface{}, error) {
 			return []byte(os.Getenv("JWT_SECRET")), nil
 		})
@@ -31,6 +31,7 @@ func JWTAuth(next http.Handler) http.Handler {
 			http.Error(w, "token invalido", http.StatusUnauthorized)
 			return
 		}
+		r.Header.Set("X-User-ID", claims["id"].(string))
 		r.Header.Set("X-User-Email", claims["email"].(string))
 		r.Header.Set("X-User-Role", claims["role"].(string))
 		next.ServeHTTP(w, r)
