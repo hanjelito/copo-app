@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"time"
 
 	"copo/auth/internal/handler"
 	"copo/auth/internal/repository"
@@ -18,9 +19,18 @@ import (
 func main() {
 	godotenv.Load()
 
-	db, err := pgxpool.New(context.Background(), os.Getenv("DATABASE_URL"))
-	if err != nil {
-		log.Fatalf("no se pudo conectar a postgres: %v", err)
+	var err error
+	var db *pgxpool.Pool
+	for i := range 5 {
+		db, err = pgxpool.New(context.Background(), os.Getenv("DATABASE_URL"))
+		if err == nil {
+			break
+		}
+		log.Printf("Attempt %d/5: Unable to connect to Postgres, retrying... %v", i+1, err)
+		time.Sleep(3 * time.Second)
+	}
+	if db == nil {
+		log.Fatal("Unable to connect to Postgress after 5 attempts")
 	}
 	defer db.Close()
 

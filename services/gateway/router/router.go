@@ -22,21 +22,23 @@ func New() *chi.Mux {
 	bookingsURL := os.Getenv("BOOKINGS_SERVICE_URL")
 
 	//public routes
-	// Rutas públicas
 	r.Post("/auth/register", proxy.To(authURL))
 	r.Post("/auth/login", proxy.To(authURL))
 	r.Post("/auth/refresh", proxy.To(authURL))
 
 	r.Group(func(r chi.Router) {
 		r.Use(middleware.JWTAuth)
+		//Auth
 		r.Get("/auth/me", proxy.To(authURL))
 		r.Get("/users/me", proxy.To(userURL))
 		r.Put("/users/me", proxy.To(userURL))
+		//Ride
 		r.Post("/rides", proxy.To(ridesURL))
 		r.Get("/rides", proxy.To(ridesURL))
 		r.Get("/rides/{id}", proxy.To(ridesURL))
+		//Booking
 		r.Post("/bookings", proxy.To(bookingsURL))
-		r.Get("/bookings", proxy.To(bookingsURL))
+		r.Get("/bookings/me", proxy.To(bookingsURL))
 		r.Delete("/bookings/{id}", proxy.To(bookingsURL))
 	})
 
