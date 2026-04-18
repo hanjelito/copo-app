@@ -253,7 +253,7 @@ Cliente → API Gateway (JWT + rate limit)
 ### Fase 4 — Extras
 - [x] Migraciones con `goose` ✅
 - [x] Booking Retry Worker — reintenta INSERT si PG falla ✅
-- [ ] Testing con k6 — smoke + load tests para todos los servicios (en progreso)
+- [x] Testing con k6 — smoke + load tests para todos los servicios ✅
 - [ ] Geo / tracking en tiempo real (Redis Geo + WebSockets)
 - [ ] Pagos
 - [ ] Ratings post-viaje
@@ -263,33 +263,38 @@ Cliente → API Gateway (JWT + rate limit)
 
 ## Testing con k6
 
-> En progreso — pendiente de implementar scripts y configuración Docker.
+k6 corre en Docker pero los servicios corren localmente con `go run`. Por eso se usa `host.docker.internal` para alcanzar el host desde el contenedor.
 
-### Estructura planeada
+### Estructura
 
 ```
 k6/
   scripts/
-    01_auth.js       → register + login
-    02_rides.js      → crear + listar viajes
-    03_bookings.js   → reservar + cancelar
-    04_full_flow.js  → flujo completo end-to-end
+    01_auth.js       → registrar 100 usuarios
+    02_rides.js      → login + crear viaje
+    03_booking.js    → login + crear ride + reservar
+    04_full_flow.js  → flujo completo end-to-end (login + ride + booking + listar + cancelar)
 ```
 
 ### Correr tests
 
-k6 corre en Docker pero los servicios corren localmente con `go run`. Por eso se usa `host.docker.internal` para alcanzar el host desde el contenedor.
+> Siempre usar `--remove-orphans` para limpiar contenedores anteriores.
 
 ```bash
-# Auth — registrar 100 usuarios
-docker compose --profile testing run -e BASE_URL=http://host.docker.internal:8080 k6 run /scripts/01_auth.js
+# Auth — registrar usuarios (correr primero)
+docker compose --profile testing run --remove-orphans -e BASE_URL=http://host.docker.internal:8080 k6 run /scripts/01_auth.js
 
 # Rides — login + crear viaje
-docker compose --profile testing run -e BASE_URL=http://host.docker.internal:8080 k6 run /scripts/02_rides.js
+docker compose --profile testing run --remove-orphans -e BASE_URL=http://host.docker.internal:8080 k6 run /scripts/02_rides.js
 
-# Bookings — flujo completo
-docker compose --profile testing run -e BASE_URL=http://host.docker.internal:8080 k6 run /scripts/03_bookings.js
+# Bookings — reservar
+docker compose --profile testing run --remove-orphans -e BASE_URL=http://host.docker.internal:8080 k6 run /scripts/03_booking.js
 
 # Full flow — end-to-end
-docker compose --profile testing run -e BASE_URL=http://host.docker.internal:8080 k6 run /scripts/04_full_flow.js
+docker compose --profile testing run --remove-orphans -e BASE_URL=http://host.docker.internal:8080 k6 run /scripts/04_full_flow.js
 ```
+
+### Notas
+- El `01_auth.js` debe correrse primero — crea los usuarios que usan los demás scripts
+- Si limpias la DB, vuelve a correr el `01_auth.js` antes de los otros
+- El p90/p95 de ~1s es normal — es el costo de bcrypt en el login

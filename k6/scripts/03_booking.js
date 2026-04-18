@@ -24,7 +24,7 @@ export default function () {
         JSON.stringify({
             origin: 'Madrid',
             destination: 'barcelona',
-            departure: '2025-06-01T08:00:00Z',
+            departure: '2026-06-01T08:00:00Z',
             seats: 3,
         }),
         {
