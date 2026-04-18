@@ -92,7 +92,7 @@ func (s *AuthService) generateTokens(id, email, role string) (*model.AuthRespons
 		"id":    id,
 		"email": email,
 		"role":  role,
-		"exp":   time.Now().Add(7 * 24 * time.Minute).Unix(),
+		"exp":   time.Now().Add(7 * 24 * time.Hour).Unix(),
 	})
 
 	access, err := accessToken.SignedString(secret)

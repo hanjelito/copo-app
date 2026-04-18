@@ -34,5 +34,14 @@ services:
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
       KAFKA_CLUSTER_ID: "tienda-kafka-cluster"
 
+  k6:
+    image: grafana/k6:latest
+    container_name: gotest_k6
+    profiles:
+      - testing
+    volumes:
+      - ./k6/scripts:/scripts
+    network_mode: host
+
 volumes:
   postgres_data:

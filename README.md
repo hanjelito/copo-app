@@ -252,8 +252,44 @@ Cliente → API Gateway (JWT + rate limit)
 
 ### Fase 4 — Extras
 - [x] Migraciones con `goose` ✅
-- [ ] Booking Retry Worker — reintenta INSERT si PG falla
+- [x] Booking Retry Worker — reintenta INSERT si PG falla ✅
+- [ ] Testing con k6 — smoke + load tests para todos los servicios (en progreso)
 - [ ] Geo / tracking en tiempo real (Redis Geo + WebSockets)
 - [ ] Pagos
 - [ ] Ratings post-viaje
 - [ ] gRPC entre API Gateway y microservicios
+
+---
+
+## Testing con k6
+
+> En progreso — pendiente de implementar scripts y configuración Docker.
+
+### Estructura planeada
+
+```
+k6/
+  scripts/
+    01_auth.js       → register + login
+    02_rides.js      → crear + listar viajes
+    03_bookings.js   → reservar + cancelar
+    04_full_flow.js  → flujo completo end-to-end
+```
+
+### Correr tests
+
+k6 corre en Docker pero los servicios corren localmente con `go run`. Por eso se usa `host.docker.internal` para alcanzar el host desde el contenedor.
+
+```bash
+# Auth — registrar 100 usuarios
+docker compose --profile testing run -e BASE_URL=http://host.docker.internal:8080 k6 run /scripts/01_auth.js
+
+# Rides — login + crear viaje
+docker compose --profile testing run -e BASE_URL=http://host.docker.internal:8080 k6 run /scripts/02_rides.js
+
+# Bookings — flujo completo
+docker compose --profile testing run -e BASE_URL=http://host.docker.internal:8080 k6 run /scripts/03_bookings.js
+
+# Full flow — end-to-end
+docker compose --profile testing run -e BASE_URL=http://host.docker.internal:8080 k6 run /scripts/04_full_flow.js
+```

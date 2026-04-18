@@ -2,14 +2,17 @@ package main
 
 import (
 	"context"
+	"log"
+	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
+
 	"copo/bookings/internal/handler"
 	"copo/bookings/internal/repository"
 	"copo/bookings/internal/router"
 	"copo/bookings/internal/service"
-	"log"
-	"net/http"
-	"os"
-	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/joho/godotenv"
@@ -24,7 +27,7 @@ func main() {
 	var db *pgxpool.Pool
 	for i := range 5 {
 		db, err = pgxpool.New(context.Background(), os.Getenv("DATABASE_URL"))
-		if err != nil {
+		if err == nil {
 			break
 		}
 		log.Printf("Attempt %d/5: Unable to connect to Postgres, retrying... %v", i+1, err)
@@ -60,6 +63,29 @@ func main() {
 	if port == "" {
 		port = "8084"
 	}
-	log.Printf("Bookings service run in :%s", port)
-	log.Fatal(http.ListenAndServe(":"+port, r))
+
+	srv := &http.Server{
+		Addr:    ":" + port,
+		Handler: r,
+	}
+
+	go func() {
+		log.Printf("Booking service running on %s", port)
+		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			log.Fatalf("error starting server: %v", err)
+		}
+	}()
+
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+	<-quit
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	if err := srv.Shutdown(ctx); err != nil {
+		log.Fatalf("error shutting down server: %v", err)
+	}
+
+	log.Println("Booking service stopped")
 }
